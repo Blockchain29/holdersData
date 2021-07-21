@@ -103,14 +103,12 @@ export default function App() {
       let infos = res.split('\n');
       infos.shift();
       infos.pop();
-      console.log(infos)
       let holdersToDisplay = [];
       for (let index = (pageNum - 1) * DISPALY_NUM; index < pageNum * DISPALY_NUM; index++) {
         const element = infos[index];
         if (element) {
           const holder = element.split(',')
           if (holder.length > 3 && Web3.utils.isAddress(holder[0])) {
-            console.log([...holderList, {addr: holder[0], bal: holder[2]}])
             holdersToDisplay.push({addr: holder[0], bal: holder[2]});
             //setHolderList([...holderList, {addr: holder[0], bal: holder[1]}]);
           }
@@ -119,6 +117,16 @@ export default function App() {
       setFetching(false)
       setHolderList(holdersToDisplay);
     })
+  }
+
+  const exportFile = async () => {
+    if(!Web3.utils.isAddress(tokenAddr)) {
+      showAlertDlg("Invalid Address", 1000);
+      return;
+    }
+
+    const downloadUrl = "https://api.bloxy.info/token/token_holders_list?token=" + tokenAddr + "&limit=100000&key=ACCIlegf1FPc0&format=csv";
+    window.open(downloadUrl, "_blank")
   }
 
   const goNextPage = async () => {
@@ -159,7 +167,7 @@ export default function App() {
                 </div>
                 <div style={{marginTop: "20px"}}> 
                   <Button className="submit_btn" onClick={() => scan(page)} style={{marginLeft: "10px"}} color="primary">&nbsp;&nbsp;Scan&nbsp;&nbsp;</Button>
-                  <Button className="submit_btn" style={{marginLeft: "10px"}} color="primary">Export</Button>
+                  <Button className="submit_btn" onClick={exportFile} style={{marginLeft: "10px"}} color="primary">Export</Button>
                 </div>
                 <div style={{marginBottom: "5px"}}>
                   {fetching ? <div><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" variant="info"></Spinner><span className="loading-span">&nbsp;Loading...</span></div> : <div><span>List of Holders</span></div>}
