@@ -3,7 +3,7 @@ import Button from '@material-ui/core/Button';
 import Container from 'react-bootstrap/Container';
 import { Row } from 'react-bootstrap';
 import { Col } from 'react-bootstrap';
-//import Web3 from 'web3';
+import Web3 from 'web3';
 //import { AbiItem } from 'web3-utils'
 
 
@@ -36,13 +36,6 @@ export default function App() {
       showAlertDlg('MetaMask is not installed!', 1400)
     }
 
-    /*** check if it is on BSC network***/
-    const chainId = await getChainId()
-    if (chainId !== CHAIN_ID) {
-      alert('wrong network!')
-      return
-    }
-
     /*** metamask connecting ***/
     window.ethereum.request({
       method: 'eth_requestAccounts'
@@ -58,14 +51,6 @@ export default function App() {
       if (typeof window.ethereum === 'undefined') {
         showAlertDlg('MetaMask is not installed!', 1400)
       }
-  
-      /***** when chain Network is changed *****/
-      window.ethereum.on('chainChanged', (chainId: any) => {
-        if (chainId !== CHAIN_ID) {
-          showAlertDlg('wrong network!', 1400)
-        } else {
-        }
-      });
   
       /***** when account is changed *****/
       window.ethereum.on('accountsChanged', (accounts: any) => {
@@ -92,6 +77,9 @@ export default function App() {
   }, [walletAddress]);
 
   const onInputTokenAddr = async (e: any) => {
+    if(!Web3.utils.isAddress(e.target.value)) {
+      showAlertDlg("Invalid Address", 1000)
+    }
     setTokenAddr(e.target.value);
   }
 
