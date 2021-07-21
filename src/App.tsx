@@ -91,6 +91,10 @@ export default function App() {
     }
   }, [walletAddress]);
 
+  const onInputTokenAddr = async (e: any) => {
+    setTokenAddr(e.target.value);
+  }
+
   return (
     <div className='main_page'>
       <Container>
@@ -111,7 +115,7 @@ export default function App() {
                 <div className="row">
                   <div className="col-md-2"></div>
                   <div className="col-md-8">
-                    <input type="text" className="form-control" placeholder="Tokens Address" value={tokenAddr} onChange={(e) => setTokenAddr(e.target.value)}/>
+                    <input type="text" className="form-control" placeholder="Tokens Address" value={tokenAddr} onChange={(e) => onInputTokenAddr(e)}/>
                   </div>
                 </div>
                 <div style={{marginTop: "10px"}}> 
@@ -137,15 +141,14 @@ export default function App() {
                   </table>
                 </div>
               </div>
-              
             </div>
           </div>
         </div>
-        {showMessage && <div className="col-lg-10 top-alert">
-            <div className="alert alert-success alert-dismissible">
+        <div className="col-lg-10 top-alert">
+            <div className={"alert alert-success alert-dismissible " + (showMessage ? "alert-shown" : "alert-hidden")}>
             <strong>Alert:</strong> {message}
             </div>
-        </div>}
+        </div>
       </Container>
     </div>
   );
