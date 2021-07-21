@@ -31,13 +31,31 @@ body {
   background-color: transparent !important;
 }
 
-.recipent_list {
+.address_list {
   padding: 15px;
   background-color: #fff;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
-.recipent_list .table {
+.address_list .table {
   margin-bottom: 0rem;
+}
+
+.address_list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.address_list::-webkit-scrollbar-track {
+  background: #fffafa;
+}
+
+.address_list::-webkit-scrollbar-thumb {
+  background: #f7f4f4;
+}
+
+.address_list::-webkit-scrollbar-thumb:hover {
+  background: rgb(224, 218, 218);
 }
 
 .text-left {
@@ -55,6 +73,11 @@ body {
   background-color: #fb9644 !important;
   padding: 2px 25px !important;
   margin-bottom: 25px !important;
+}
+
+.page_btn {
+  color: grey;
+  border: none;
 }
 
 .hold_form input {

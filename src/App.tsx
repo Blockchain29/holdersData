@@ -10,7 +10,8 @@ import Web3 from 'web3';
 declare let window: any;
 
 const INIT_WALLET = "CONNECT";
-const CHAIN_ID = '0x38';
+const DISPALY_NUM = 50;
+//const CHAIN_ID = '0x38';
 //let web3 = new Web3(window.ethereum)
 
 export default function App() {
@@ -18,6 +19,9 @@ export default function App() {
   const [tokenAddr, setTokenAddr] = useState('');
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
+  const [holderList, setHolderList] = useState<{}[]>([])
+  
+  const [page, setPage] = useState(1);
   function showAlertDlg(msg: any, timeout: any) {
     setMessage(msg);
     setShowMessage(true);
@@ -26,10 +30,10 @@ export default function App() {
     }, timeout);
   }
 
-  const getChainId = async () => {
+  /*const getChainId = async () => {
     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
     return chainId;
-  }
+  }*/
 
   const connectWallet = async () => {
     if (typeof window.ethereum === 'undefined') {
@@ -83,6 +87,45 @@ export default function App() {
     setTokenAddr(e.target.value);
   }
 
+  const scan = async (pageNum: any) => {
+    if(!Web3.utils.isAddress(tokenAddr)) {
+      showAlertDlg("Invalid Address", 1000);
+      return;
+    }
+
+    fetch("https://api.bloxy.info/token/token_holders_list?token=" + tokenAddr + "&limit=" + pageNum * DISPALY_NUM + "&key=ACCIlegf1FPc0&format=csv")
+    .then(res => res.text())
+    .then(res => {
+      let infos = res.split('\n');
+      infos.shift();
+      infos.pop();
+      console.log(infos)
+      let holdersToDisplay = [];
+      for (let index = (pageNum - 1) * DISPALY_NUM; index < pageNum * DISPALY_NUM; index++) {
+        const element = infos[index];
+        if (element) {
+          const holder = element.split(',')
+          if (holder.length > 3 && Web3.utils.isAddress(holder[0])) {
+            console.log([...holderList, {addr: holder[0], bal: holder[2]}])
+            holdersToDisplay.push({addr: holder[0], bal: holder[2]});
+            //setHolderList([...holderList, {addr: holder[0], bal: holder[1]}]);
+          }
+        }
+      }
+      setHolderList(holdersToDisplay);
+    })
+  }
+
+  const goNextPage = async () => {
+    setPage(page + 1);
+    scan(page + 1);
+  }
+
+  const goPrevPage = async () => {
+    setPage(page - 1);
+    scan(page - 1);
+  }
+
   return (
     <div className='main_page'>
       <Container>
@@ -106,12 +149,12 @@ export default function App() {
                     <input type="text" className="form-control" placeholder="Tokens Address" value={tokenAddr} onChange={(e) => onInputTokenAddr(e)}/>
                   </div>
                 </div>
-                <div style={{marginTop: "10px"}}> 
-                  <Button className="submit_btn" style={{marginLeft: "10px"}} color="primary">&nbsp;&nbsp;Scan&nbsp;&nbsp;</Button>
+                <div style={{marginTop: "20px"}}> 
+                  <Button className="submit_btn" onClick={() => scan(page)} style={{marginLeft: "10px"}} color="primary">&nbsp;&nbsp;Scan&nbsp;&nbsp;</Button>
                   <Button className="submit_btn" style={{marginLeft: "10px"}} color="primary">Export</Button>
                 </div>
-                <div className="recipent_list list-wrap">
-                  <label>List of Holders</label>
+                <label>List of Holders</label>
+                <div className="address_list list-wrap">
                   <table className="table">
                     <thead>
                       <tr>
@@ -121,13 +164,19 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>test</td>
-                        <td>test</td>
-                      </tr>
+                      {holderList.map((e: any, i: any) => {
+                        return <tr key={i}>
+                        <td>{e.addr}</td>
+                        <td>{e.bal}</td>
+                      </tr>})}
                     </tbody>
                   </table>
                 </div>
+                {(page > 0 && holderList.length > 0) &&<div style={{marginTop: "20px"}}> 
+                    <button className="page_btn" onClick={goPrevPage}>Prev</button>
+                    <label style={{padding: "15px"}}>{page}</label>
+                    <button className="page_btn" onClick={goNextPage}>Next</button>
+                </div>}
               </div>
             </div>
           </div>
