@@ -31,6 +31,10 @@ body {
   background-color: transparent !important;
 }
 
+.loading-span {
+  color: rgb(60, 60, 173);
+}
+
 .address_list {
   padding: 15px;
   background-color: #fff;

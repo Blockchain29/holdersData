@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Button from '@material-ui/core/Button';
 import Container from 'react-bootstrap/Container';
+import Spinner from 'react-bootstrap/Spinner'
 import { Row } from 'react-bootstrap';
 import { Col } from 'react-bootstrap';
 import Web3 from 'web3';
@@ -20,6 +21,7 @@ export default function App() {
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
   const [holderList, setHolderList] = useState<{}[]>([])
+  const [fetching, setFetching] = useState(false);
   
   const [page, setPage] = useState(1);
   function showAlertDlg(msg: any, timeout: any) {
@@ -93,6 +95,8 @@ export default function App() {
       return;
     }
 
+    setFetching(true);
+
     fetch("https://api.bloxy.info/token/token_holders_list?token=" + tokenAddr + "&limit=" + pageNum * DISPALY_NUM + "&key=ACCIlegf1FPc0&format=csv")
     .then(res => res.text())
     .then(res => {
@@ -112,6 +116,7 @@ export default function App() {
           }
         }
       }
+      setFetching(false)
       setHolderList(holdersToDisplay);
     })
   }
@@ -122,6 +127,9 @@ export default function App() {
   }
 
   const goPrevPage = async () => {
+    if (page === 1) {
+      return;
+    }
     setPage(page - 1);
     scan(page - 1);
   }
@@ -153,7 +161,9 @@ export default function App() {
                   <Button className="submit_btn" onClick={() => scan(page)} style={{marginLeft: "10px"}} color="primary">&nbsp;&nbsp;Scan&nbsp;&nbsp;</Button>
                   <Button className="submit_btn" style={{marginLeft: "10px"}} color="primary">Export</Button>
                 </div>
-                <label>List of Holders</label>
+                <div style={{marginBottom: "5px"}}>
+                  {fetching ? <div><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" variant="info"></Spinner><span className="loading-span">&nbsp;Loading...</span></div> : <div><span>List of Holders</span></div>}
+                </div>
                 <div className="address_list list-wrap">
                   <table className="table">
                     <thead>
@@ -172,7 +182,7 @@ export default function App() {
                     </tbody>
                   </table>
                 </div>
-                {(page > 0 && holderList.length > 0) &&<div style={{marginTop: "20px"}}> 
+                {(page > 0 && holderList.length > 0) && <div style={{marginTop: "20px"}}> 
                     <button className="page_btn" onClick={goPrevPage}>Prev</button>
                     <label style={{padding: "15px"}}>{page}</label>
                     <button className="page_btn" onClick={goNextPage}>Next</button>
