@@ -5,7 +5,7 @@ import Spinner from 'react-bootstrap/Spinner'
 import { Row } from 'react-bootstrap';
 import { Col } from 'react-bootstrap';
 import Web3 from 'web3';
-//import { AbiItem } from 'web3-utils'
+import { AbiItem } from 'web3-utils'
 
 
 declare let window: any;
@@ -13,7 +13,7 @@ declare let window: any;
 const INIT_WALLET = "CONNECT";
 const DISPALY_NUM = 50;
 //const CHAIN_ID = '0x38';
-//let web3 = new Web3(window.ethereum)
+let web3 = new Web3(window.ethereum)
 
 export default function App() {
   const [walletAddress, setWalletAddress] = useState(INIT_WALLET);
@@ -22,6 +22,11 @@ export default function App() {
   const [showMessage, setShowMessage] = useState(false);
   const [holderList, setHolderList] = useState<{}[]>([])
   const [fetching, setFetching] = useState(false);
+  const [holderNumFetching, setHolderNumFetching] = useState(false)
+  const [tokenSymbol, setTokenSymbol] = useState('')
+  const [tokenDecimal, setTokenDecimal] = useState(0)
+  const [tokenTotal, setTokenTotal] = useState(0)
+  const [holderNum, setHolderNum] = useState(0)
   
   const [page, setPage] = useState(1);
   function showAlertDlg(msg: any, timeout: any) {
@@ -90,6 +95,10 @@ export default function App() {
   }
 
   const scan = async (pageNum: any) => {
+    setTokenTotal(0)
+    setTokenDecimal(0)
+    setTokenSymbol('')
+    
     if(!Web3.utils.isAddress(tokenAddr)) {
       showAlertDlg("Invalid Address", 1000);
       return;
@@ -110,12 +119,70 @@ export default function App() {
           const holder = element.split(',')
           if (holder.length > 3 && Web3.utils.isAddress(holder[0])) {
             holdersToDisplay.push({addr: holder[0], bal: holder[2]});
-            //setHolderList([...holderList, {addr: holder[0], bal: holder[1]}]);
           }
         }
       }
+
       setFetching(false)
       setHolderList(holdersToDisplay);
+    })
+
+    const erc20_abi = [
+      {
+        "inputs":[],
+        "name":"decimals",
+        "outputs": [
+            {
+                "internalType":"uint8",
+                "name":"",
+                "type":"uint8"
+            }
+        ],
+        "stateMutability":"view",
+        "type":"function"
+      },
+      {
+        "inputs":[],
+        "name":"symbol",
+        "outputs": [
+            {
+                "internalType":"string",
+                "name":"","type":"string"
+            }
+        ],
+        "stateMutability":"view",
+        "type":"function"
+      },
+      {
+        "constant":true,
+        "inputs":[],
+        "name":"totalSupply",
+        "outputs":[
+          {"name":"","type":"uint256"}
+        ],
+        "payable":false,
+        "stateMutability":"view",
+        "type":"function"
+      }
+    ]
+    const tokenContract = new web3.eth.Contract(erc20_abi as AbiItem[], tokenAddr);
+    let decimal = await tokenContract.methods.decimals().call();
+    setTokenDecimal(Number(decimal))
+    let symbol = await tokenContract.methods.symbol().call();
+    setTokenSymbol(symbol)
+    let total = await tokenContract.methods.totalSupply().call();
+    setTokenTotal(Number(total))
+
+    setHolderNumFetching(true);
+
+    fetch("https://api.bloxy.info/token/token_holders_list?token=" + tokenAddr + "&limit=100000&key=ACCIlegf1FPc0&format=csv")
+    .then(res => res.text())
+    .then(res => {
+      let infos = res.split('\n');
+      infos.shift();
+      infos.pop();
+      setHolderNum(infos.length)
+      setHolderNumFetching(false)
     })
   }
 
@@ -171,6 +238,9 @@ export default function App() {
                 </div>
                 <div style={{marginBottom: "5px"}}>
                   {fetching ? <div><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" variant="info"></Spinner><span className="loading-span">&nbsp;Loading...</span></div> : <div><span>List of Holders</span></div>}
+                </div>
+                <div style={{marginBottom: "5px"}}>
+                  {holderNumFetching ? <span><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" variant="info"></Spinner><span className="loading-span">&nbsp;Loading...</span></span> : <span><span>Total supply: {tokenTotal / Math.pow(10, tokenDecimal)}{tokenSymbol} &nbsp;&nbsp;Token Holders: {holderNum}</span></span>}
                 </div>
                 <div className="address_list list-wrap">
                   <table className="table">
